@@ -508,10 +508,15 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 通过反射获取类中的所有方法，然后变量以字符串set开头的方法，得到set方法的参数类型，再通过ExtensionFactory
+     * 寻找参数类型相同的扩展实例，如果找到，就设值进去
+     * */
     private T injectExtension(T instance) {
         try {
             if (objectFactory != null) {
                 for (Method method : instance.getClass().getMethods()) {
+                    //找到一个以set开头，只有一个参数，并且是public方法
                     if (method.getName().startsWith("set")
                             && method.getParameterTypes().length == 1
                             && Modifier.isPublic(method.getModifiers())) {
@@ -552,6 +557,9 @@ public class ExtensionLoader<T> {
         return clazz;
     }
 
+    /**
+     * 扩展点配置信息加载过程
+     */
     private Map<String, Class<?>> getExtensionClasses() {
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
@@ -580,7 +588,7 @@ public class ExtensionLoader<T> {
                 if (names.length == 1) cachedDefaultName = names[0];
             }
         }
-
+        //从指定路径中读取所有配置文件
         Map<String, Class<?>> extensionClasses = new HashMap<String, Class<?>>();
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY);
         loadDirectory(extensionClasses, DUBBO_DIRECTORY);

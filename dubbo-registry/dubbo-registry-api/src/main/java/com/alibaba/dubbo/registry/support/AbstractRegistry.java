@@ -51,7 +51,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * AbstractRegistry. (SPI, Prototype, ThreadSafe)
- *
  */
 public abstract class AbstractRegistry implements Registry {
 
@@ -70,9 +69,10 @@ public abstract class AbstractRegistry implements Registry {
     private final AtomicLong lastCacheChanged = new AtomicLong();
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
+    //内存中的服务缓存对象
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<URL, Map<String, List<URL>>>();
     private URL registryUrl;
-    // Local disk cache file
+    // Local disk cache file 磁盘文件服务缓存对象
     private File file;
 
     public AbstractRegistry(URL url) {
@@ -190,6 +190,9 @@ public abstract class AbstractRegistry implements Registry {
         }
     }
 
+    /**
+     * 缓存的加载
+     */
     private void loadProperties() {
         if (file != null && file.exists()) {
             InputStream in = null;
@@ -371,6 +374,9 @@ public abstract class AbstractRegistry implements Registry {
         }
     }
 
+    /**
+     * 封装了更新内存缓存和更新文件缓存的逻辑
+     * */
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");

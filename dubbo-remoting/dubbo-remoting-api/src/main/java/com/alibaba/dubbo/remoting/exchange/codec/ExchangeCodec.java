@@ -43,9 +43,6 @@ import java.io.InputStream;
 
 /**
  * ExchangeCodec.
- *
- *
- *
  */
 public class ExchangeCodec extends TelnetCodec {
 
@@ -66,6 +63,9 @@ public class ExchangeCodec extends TelnetCodec {
         return MAGIC;
     }
 
+    /**
+     * 协议编码
+     */
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
         if (msg instanceof Request) {
@@ -77,9 +77,13 @@ public class ExchangeCodec extends TelnetCodec {
         }
     }
 
+    /**
+     * 协议解码
+     */
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
         int readable = buffer.readableBytes();
+        //最多读取16个字节，并分配存储空间
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
         buffer.readBytes(header);
         return decode(channel, buffer, readable, header);
@@ -109,7 +113,7 @@ public class ExchangeCodec extends TelnetCodec {
             return DecodeResult.NEED_MORE_INPUT;
         }
 
-        // get data length.
+        // 提取头部存储的报文长度，并校验长度是否超过限制
         int len = Bytes.bytes2int(header, 12);
         checkPayload(channel, len);
 
@@ -137,6 +141,9 @@ public class ExchangeCodec extends TelnetCodec {
         }
     }
 
+    /**
+     * 解码请求报文
+     */
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
         // get request id.
@@ -209,10 +216,11 @@ public class ExchangeCodec extends TelnetCodec {
     }
 
     protected void encodeRequest(Channel channel, ChannelBuffer buffer, Request req) throws IOException {
+        //获取指定或默认的序列化协议
         Serialization serialization = getSerialization(channel);
-        // header.
+        // header. 构造16字节头
         byte[] header = new byte[HEADER_LENGTH];
-        // set magic number.
+        // set magic number. 占用2个字节存储魔法数
         Bytes.short2bytes(MAGIC, header);
 
         // set request and serialization flag.

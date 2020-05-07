@@ -33,7 +33,7 @@ import com.alibaba.dubbo.common.extension.SPI;
 public interface Transporter {
 
     /**
-     * Bind a server.
+     * Bind a server. bind 方法会生成一个服务，监听来自客户端的请求
      *
      * @param url     server url
      * @param handler
@@ -45,7 +45,7 @@ public interface Transporter {
     Server bind(URL url, ChannelHandler handler) throws RemotingException;
 
     /**
-     * Connect to a server.
+     * Connect to a server. connect 方法则会连接到一个服务
      *
      * @param url     server url
      * @param handler

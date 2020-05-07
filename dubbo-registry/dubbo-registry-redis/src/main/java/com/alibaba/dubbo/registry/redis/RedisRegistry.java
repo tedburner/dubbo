@@ -27,7 +27,6 @@ import com.alibaba.dubbo.common.utils.UrlUtils;
 import com.alibaba.dubbo.registry.NotifyListener;
 import com.alibaba.dubbo.registry.support.FailbackRegistry;
 import com.alibaba.dubbo.rpc.RpcException;
-
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -53,7 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * RedisRegistry
- *
  */
 public class RedisRegistry extends FailbackRegistry {
 
@@ -147,6 +145,7 @@ public class RedisRegistry extends FailbackRegistry {
         this.root = group;
 
         this.expirePeriod = url.getParameter(Constants.SESSION_TIMEOUT_KEY, Constants.DEFAULT_SESSION_TIMEOUT);
+        //启动一个定时调度线程池，不断调用deferExpired()方法延续key的超时时间
         this.expireFuture = expireExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -173,6 +172,7 @@ public class RedisRegistry extends FailbackRegistry {
                             }
                         }
                     }
+                    //如果是服务治理中心，则清理过期的key
                     if (admin) {
                         clean(jedis);
                     }
@@ -201,6 +201,7 @@ public class RedisRegistry extends FailbackRegistry {
                         URL url = URL.valueOf(entry.getKey());
                         if (url.getParameter(Constants.DYNAMIC_KEY, true)) {
                             long expire = Long.parseLong(entry.getValue());
+                            //通过比较缓存中的时间戳和当前时间戳，删除哈希表中的缓存
                             if (expire < now) {
                                 jedis.hdel(key, entry.getKey());
                                 delete = true;
@@ -585,6 +586,7 @@ public class RedisRegistry extends FailbackRegistry {
                                                 Set<String> keys = jedis.keys(service);
                                                 if (keys != null && !keys.isEmpty()) {
                                                     for (String s : keys) {
+                                                        //订阅通道
                                                         doNotify(jedis, s);
                                                     }
                                                 }

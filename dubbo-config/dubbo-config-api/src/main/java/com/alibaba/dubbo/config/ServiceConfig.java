@@ -353,6 +353,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         unexported = true;
     }
 
+    /**
+     * 多协议多注册中心暴露
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
         List<URL> registryURLs = loadRegistries(true);
@@ -374,8 +377,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (ConfigUtils.getPid() > 0) {
             map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
         }
+        //读取其他配置信息到map，用于后续构造URL
         appendParameters(map, application);
         appendParameters(map, module);
+        //读取全局配置信息，会自动添加前缀
         appendParameters(map, provider, Constants.DEFAULT_KEY);
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
@@ -484,6 +489,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (!Constants.SCOPE_NONE.toString().equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
+            //本地服务暴露，使用 injvm，在同一个JVM中通信
             if (!Constants.SCOPE_REMOTE.toString().equalsIgnoreCase(scope)) {
                 exportLocal(url);
             }
@@ -497,6 +503,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         url = url.addParameterIfAbsent(Constants.DYNAMIC_KEY, registryURL.getParameter(Constants.DYNAMIC_KEY));
                         URL monitorUrl = loadMonitor(registryURL);
                         if (monitorUrl != null) {
+                            //如果配置了监控地址，则服务调用信息会上报
                             url = url.addParameterAndEncoded(Constants.MONITOR_KEY, monitorUrl.toFullString());
                         }
                         if (logger.isInfoEnabled()) {
@@ -516,10 +523,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         exporters.add(exporter);
                     }
                 } else {
+                    //通过动态代理转换成 Invoker，registryURL  存储的是注册中心地址，使用 export 作为key追加服务元数据信息
                     Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
                     DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
                     Exporter<?> exporter = protocol.export(wrapperInvoker);
+                    //服务暴露后向注册中心注册服务信息
                     exporters.add(exporter);
                 }
             }

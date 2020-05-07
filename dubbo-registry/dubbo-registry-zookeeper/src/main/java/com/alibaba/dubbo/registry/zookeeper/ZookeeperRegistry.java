@@ -38,7 +38,6 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * ZookeeperRegistry
- *
  */
 public class ZookeeperRegistry extends FailbackRegistry {
 
@@ -139,10 +138,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 ChildListener zkListener = listeners.get(listener);
                 if (zkListener == null) {
                     listeners.putIfAbsent(listener, new ChildListener() {
-                        @Override
+                        @Override// 内部类的方法，不会立即执行，知会在出发变更通知时执行。
                         public void childChanged(String parentPath, List<String> currentChilds) {
                             for (String child : currentChilds) {
                                 child = URL.decode(child);
+                                //如果存在子节点还未被订阅，说明是新的节点，则订阅
                                 if (!anyServices.contains(child)) {
                                     anyServices.add(child);
                                     subscribe(url.setPath(child).addParameters(Constants.INTERFACE_KEY, child,
@@ -153,12 +153,15 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     });
                     zkListener = listeners.get(listener);
                 }
+                //创建持久化节点，接下来订阅持久化节点的直接子节点
                 zkClient.create(root, false);
                 List<String> services = zkClient.addChildListener(root, zkListener);
+                //遍历所有子节点进行订阅
                 if (services != null && !services.isEmpty()) {
                     for (String service : services) {
                         service = URL.decode(service);
                         anyServices.add(service);
+                        //增加当前节点的订阅，并且返回该节点下所有子节点列表
                         subscribe(url.setPath(service).addParameters(Constants.INTERFACE_KEY, service,
                                 Constants.CHECK_KEY, String.valueOf(false)), listener);
                     }

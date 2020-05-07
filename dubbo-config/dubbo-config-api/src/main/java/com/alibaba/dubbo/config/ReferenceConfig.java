@@ -344,6 +344,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         if (isInjvm() == null) {
             if (url != null && url.length() > 0) { // if a url is specified, don't do local reference
                 isJvmRefer = false;
+                //判断是不是同一个JVM内部通信
             } else if (InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl)) {
                 // by default, reference local service if there is
                 isJvmRefer = true;

@@ -31,7 +31,6 @@ import com.alibaba.dubbo.config.RegistryConfig;
 import com.alibaba.dubbo.config.spring.ReferenceBean;
 import com.alibaba.dubbo.config.spring.ServiceBean;
 import com.alibaba.dubbo.rpc.Protocol;
-
 import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -77,6 +76,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         beanDefinition.setBeanClass(beanClass);
         beanDefinition.setLazyInit(false);
         String id = element.getAttribute("id");
+        //确保Spring容器没有重复的 Bean 定义
         if ((id == null || id.length() == 0) && required) {
             String generatedBeanName = element.getAttribute("name");
             if (generatedBeanName == null || generatedBeanName.length() == 0) {
@@ -102,6 +102,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             parserContext.getRegistry().registerBeanDefinition(id, beanDefinition);
             beanDefinition.getPropertyValues().addPropertyValue("id", id);
         }
+        //解析<dubbo:protocol>配置信息
         if (ProtocolConfig.class.equals(beanClass)) {
             for (String name : parserContext.getRegistry().getBeanDefinitionNames()) {
                 BeanDefinition definition = parserContext.getRegistry().getBeanDefinition(name);
@@ -113,6 +114,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                     }
                 }
             }
+            //解析<dubbo:service>配置信息
         } else if (ServiceBean.class.equals(beanClass)) {
             String className = element.getAttribute("class");
             if (className != null && className.length() > 0) {
@@ -122,13 +124,16 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                 parseProperties(element.getChildNodes(), classDefinition);
                 beanDefinition.getPropertyValues().addPropertyValue("ref", new BeanDefinitionHolder(classDefinition, id + "Impl"));
             }
+            //解析<dubbo:provider>配置信息
         } else if (ProviderConfig.class.equals(beanClass)) {
             parseNested(element, parserContext, ServiceBean.class, true, "service", "provider", id, beanDefinition);
         } else if (ConsumerConfig.class.equals(beanClass)) {
+            //解析<dubbo:consumer>配置信息
             parseNested(element, parserContext, ReferenceBean.class, false, "reference", "consumer", id, beanDefinition);
         }
         Set<String> props = new HashSet<String>();
         ManagedMap parameters = null;
+        //获取具体配置对象所以反复，比如 ProviderConfig 类
         for (Method setter : beanClass.getMethods()) {
             String name = setter.getName();
             if (name.length() > 3 && name.startsWith("set")
