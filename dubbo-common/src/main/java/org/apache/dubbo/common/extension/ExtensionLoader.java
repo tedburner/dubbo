@@ -574,8 +574,12 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 获取自适应扩展
+     */
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
+        // 从缓存中获取自适应扩展
         Object instance = cachedAdaptiveInstance.get();
         if (instance == null) {
             if (createAdaptiveInstanceError != null) {
@@ -588,7 +592,9 @@ public class ExtensionLoader<T> {
                 instance = cachedAdaptiveInstance.get();
                 if (instance == null) {
                     try {
+                        // 创建自适应扩展
                         instance = createAdaptiveExtension();
+                        // 设置自适应扩展到缓存中
                         cachedAdaptiveInstance.set(instance);
                     } catch (Throwable t) {
                         createAdaptiveInstanceError = t;
@@ -763,6 +769,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 从配置文件中加载所需的扩展类，可得到 Map<配置项名称, 配置类的映射>
+     * <p>
      * 先从缓存中拿去配置，如果没有，单例实现从加载配置文件获取所需的扩展类
      */
     private Map<String, Class<?>> getExtensionClasses() {
@@ -1056,6 +1063,7 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
+            // 获取自适应拓展类，并通过反射实例化
             return injectExtension((T) getAdaptiveExtensionClass().newInstance());
         } catch (Exception e) {
             throw new IllegalStateException("Can't create adaptive extension " + type + ", cause: " + e.getMessage(), e);
@@ -1063,10 +1071,12 @@ public class ExtensionLoader<T> {
     }
 
     private Class<?> getAdaptiveExtensionClass() {
+        // 通过 SPI 获取所有的拓展类
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
+        // 创建自适应拓展类
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
