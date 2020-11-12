@@ -142,6 +142,7 @@ public class ExtensionLoader<T> {
 
     private ExtensionLoader(Class<?> type) {
         this.type = type;
+        // 判断type == ExtensionFactory.class，如果是，直接返回null，如果不是，获取ExtensionFactory的扩展类
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
 
