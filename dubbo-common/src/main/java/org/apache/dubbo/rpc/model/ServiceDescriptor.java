@@ -32,7 +32,9 @@ import java.util.Set;
  * We should merge them in the future.
  */
 public class ServiceDescriptor {
+    // 服务全限定名
     private final String serviceName;
+    // service的加载类
     private final Class<?> serviceInterfaceClass;
     // to accelerate search
     private final Map<String, List<MethodDescriptor>> methods = new HashMap<>();
