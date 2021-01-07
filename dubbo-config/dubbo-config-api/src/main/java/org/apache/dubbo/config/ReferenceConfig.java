@@ -200,7 +200,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         if (destroyed) {
             throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
         }
+        // 检测ref是否为空，为空则通过init初始化
         if (ref == null) {
+            // init 方法主要用于处理配置，以及调用 createProxy 生成代理类
             init();
         }
         return ref;
@@ -227,12 +229,14 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     }
 
     public synchronized void init() {
+        //如果以及初始化，不执行后续
         if (initialized) {
             return;
         }
 
 
         if (bootstrap == null) {
+            //双重检测，单例初始化bootstrap
             bootstrap = DubboBootstrap.getInstance();
             bootstrap.initialize();
         }
@@ -244,7 +248,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         Map<String, String> map = new HashMap<String, String>();
         map.put(SIDE_KEY, CONSUMER_SIDE);
-
+        // 检测是否为泛化接口
         ReferenceConfigBase.appendRuntimeParameters(map);
         if (!ProtocolUtils.isGeneric(generic)) {
             String revision = Version.getVersion(interfaceClass, version);
